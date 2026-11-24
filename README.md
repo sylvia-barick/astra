@@ -105,7 +105,14 @@ At the end of the duel, whatever SOL is left on the session key is sent back to 
 - **VRF:** a verifiable "omen" at the start gives one side +25 prana and picks the battlefield.
 - **Solana base layer:** stakes, the spectator betting pool, payouts (`claim_pot`, `claim_bet`), plus a timeout win if a player stalls.
 
-**Build and deploy the program** (needs Rust, the Solana CLI and Anchor 1.0.2):
+**Live on Solana devnet:** program [`CKEg1c51J8rK8pr3Ka8hNNMkarmUPjTf5UcHAH5THwnu`](https://explorer.solana.com/address/CKEg1c51J8rK8pr3Ka8hNNMkarmUPjTf5UcHAH5THwnu?cluster=devnet).
+Each duel runs on MagicBlock's devnet TEE validator (`devnet-tee.magicblock.app`, `MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo`).
+A full match has been played end to end on devnet:
+- create with stake, join, delegate, sealed moves (the opponent's move could not be read before the reveal);
+- VRF omen, beats to a KO;
+- commit back to Solana, pot payout and spectator-pool settlement, session-key SOL returned.
+
+**Build and deploy the program yourself** (needs Rust, the Solana CLI and Anchor 1.0.2):
 ```bash
 solana config set --url devnet
 solana airdrop 2

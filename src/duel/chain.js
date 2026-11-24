@@ -4,7 +4,7 @@ import { BN } from '@coral-xyz/anchor';
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
 import nacl from 'tweetnacl';
 import {
-  permissionPdaFromAccount, getAuthToken, waitUntilPermissionActive,
+  permissionPdaFromAccount, getAuthToken, waitUntilPermissionActive, lamportsDelegatedTransferIx,
   AUTHORITY_FLAG, TX_LOGS_FLAG, PERMISSION_PROGRAM_ID, MAGIC_PROGRAM_ID,
 } from '@magicblock-labs/ephemeral-rollups-sdk';
 
@@ -31,6 +31,7 @@ export const VRF_QUEUE = new PublicKey(env.VITE_VRF_QUEUE || '5hBR571xnXppuCPveT
 const VAULT_ID = new PublicKey('MagicVau1t999999999999999999999999999999999');
 export const SESSION_FUND_SOL = 0.02;
 export const BOT_FUND_SOL = 0.03;
+export const SLOT_RENT_LAMPORTS = 3_000_000;
 
 const idls = import.meta.glob('./idl/*.json', { eager: true });
 const rawIdl = idls['./idl/dharma_yuddha.json']?.default ?? null;
@@ -171,7 +172,17 @@ export class DuelClient {
       .instruction();
     const del = await this.delegateIx({ move: { gameId: new BN(id), player: this.owner } }, this.movePda(id, this.owner), this.owner);
     const fund = this.session.publicKey.equals(this.owner) ? [] : [this.fundIx(this.sk, SESSION_FUND_SOL)];
-    return this.sendWallet([...fund, ...extraIxs, create, del], `Create duel${stakeSol ? ` · stake ${stakeSol} SOL` : ''}`);
+    return this.sendWallet([...fund, ...extraIxs, create, del, ...this.slotRentIx(id)], `Create duel${stakeSol ? ` · stake ${stakeSol} SOL` : ''}`);
+  }
+
+  /**
+   * A move slot readable by wallet + session key needs rent for a 2-member TEE
+   * permission. Top the delegated slot up on the rollup (MagicBlock's delegated
+   * lamports transfer), in the same wallet approval as create/join.
+   */
+  slotRentIx(id) {
+    if (this.sk.equals(this.owner)) return [];
+    return [lamportsDelegatedTransferIx(this.owner, this.movePda(id, this.owner), BigInt(SLOT_RENT_LAMPORTS), crypto.getRandomValues(new Uint8Array(32)))];
   }
 
   async joinDuel(id, fighter) {
@@ -181,7 +192,7 @@ export class DuelClient {
       .instruction();
     const del = await this.delegateIx({ move: { gameId: new BN(id), player: this.owner } }, this.movePda(id, this.owner), this.owner);
     const fund = this.session.publicKey.equals(this.owner) ? [] : [this.fundIx(this.sk, SESSION_FUND_SOL)];
-    return this.sendWallet([...fund, join, del], 'Join duel + match stake');
+    return this.sendWallet([...fund, join, del, ...this.slotRentIx(id)], 'Join duel + match stake');
   }
 
   async placeBet(id, side, amountSol) {

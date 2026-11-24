@@ -443,6 +443,7 @@ export class DharmaYuddha {
     const name = w === 2 ? 'DRAW' : ROSTER[s.fighter[w]].name;
     let note = '';
     try { note = (await this.ctl.finish(s)) || ''; } catch (e) { note = 'Settlement pending: ' + (e.message || e); }
+    $('dyStatus').textContent = note || 'Duel over.';
     const won = w === this.mySide;
     $('dyResultTitle').textContent = w === 2 ? 'SAMA · DRAW' : won ? 'VIJAYA' : 'PARAJAYA';
     $('dyResultText').textContent = `${w === 2 ? 'Both warriors fall.' : name + ' wins the duel.'} ${note}`;
