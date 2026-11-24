@@ -347,6 +347,9 @@ export class DharmaYuddha {
     if (m === 'watch') return this.watch();
     $('dyLobby').classList.add('hidden');
     $('dyHud').classList.remove('hidden');
+    $('dyHud').classList.add('prep'); // hide bars/moves from any previous match until this one starts
+    this.state = null;
+    this.anim = null;
     this.g.keys.show('dharma');
     $('dyTx').innerHTML = '';
     $('dyCode').classList.add('hidden');
@@ -375,6 +378,7 @@ export class DharmaYuddha {
       this.g.loadArena(arena.id);
       this.resetActors();
       this.renderHud();
+      $('dyHud').classList.remove('prep');
       const omen = s.omenSide >= 0 ? `The omen favours ${ROSTER[s.fighter[s.omenSide]].name} (+25 prana)` : '';
       this.g.announce('DHARMA YUDDHA', `${arena.name}${omen ? ' · ' + omen : ''}`, 2.4);
       this.g.audio.conch();

@@ -335,3 +335,5 @@ button.primary.big { font-size: clamp(22px, 3vw, 32px); padding: 18px 56px; }
 .keys p { margin-top: 8px; opacity: .75; line-height: 1.45; }
 .keys .kchain { color: #c8b8ff; }
 @media (max-width: 900px) { .keys { width: 210px; font-size: 11px; } }
+
+#dyHud.prep .dy-bars, #dyHud.prep .dy-moves { visibility: hidden; }
