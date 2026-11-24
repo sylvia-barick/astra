@@ -11,7 +11,7 @@
     "chain:build": "cd onchain && anchor keys sync && anchor build && mkdir -p ../src/duel/idl && cp target/idl/dharma_yuddha.json ../src/duel/idl/",
     "chain:test": "cd onchain && cargo test -p dharma-yuddha",
     "chain:deploy": "cd onchain && anchor deploy --provider.cluster devnet",
-    "test:rules": "node --test tests/"
+    "test:rules": "node --test tests/rules.test.js"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
