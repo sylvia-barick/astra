@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ASTRA: War of Lanka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Tiro+Devanagari+Sanskrit&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- In-fight HUD -->
+  <div id="hud" class="hidden">
+    <div class="bars">
+      <div class="side left">
+        <div class="name" id="p1name">RAMA</div>
+        <div class="hp"><div class="hp-lag" id="p1lag"></div><div class="hp-fill" id="p1hp"></div></div>
+        <div class="prana" id="p1pranaBox"><div class="prana-fill" id="p1prana"></div></div>
+        <div class="wins" id="p1wins"><i></i><i></i></div>
+      </div>
+      <div class="timer" id="timer">99</div>
+      <div class="side right">
+        <div class="name" id="p2name">RAVANA</div>
+        <div class="hp"><div class="hp-lag" id="p2lag"></div><div class="hp-fill" id="p2hp"></div></div>
+        <div class="prana" id="p2pranaBox"><div class="prana-fill" id="p2prana"></div></div>
+        <div class="wins" id="p2wins"><i></i><i></i></div>
+      </div>
+    </div>
+    <div id="combo"></div>
+  </div>
+
+  <!-- Adventure (Yatra) HUD -->
+  <div id="advHud" class="hidden">
+    <div class="adv-left">
+      <div class="name">RAMA</div>
+      <div class="hp"><div class="hp-lag" id="ahpLag"></div><div class="hp-fill" id="ahp"></div></div>
+      <div class="prana" id="apranaBox"><div class="prana-fill" id="aprana"></div></div>
+      <div class="adv-prana-tip" id="apranaTip">Q · BRAHMASTRA</div>
+    </div>
+    <div class="adv-top">
+      <div class="zone-name" id="zoneName"></div>
+      <div class="objective" id="objective"></div>
+      <div class="boss hidden" id="bossBar">
+        <div class="boss-name">RAVANA · DASHANANA</div>
+        <div class="hp"><div class="hp-lag" id="bossLag"></div><div class="hp-fill" id="bossHp"></div></div>
+      </div>
+    </div>
+    <div class="adv-map">
+      <canvas id="minimap" width="200" height="200"></canvas>
+      <div class="journey" id="journey"></div>
+    </div>
+    <div id="stealth" class="stealth"></div>
+  </div>
+  <div id="hurt"></div>
+  <div id="fade"></div>
+  <div id="announce"></div>
+  <div id="toast"></div>
+
+  <!-- Wallet bar: always on top. Phantom, MetaMask, Core, Solflare, Backpack… (Solana Wallet Standard) -->
+  <div id="walletBar">
+    <span class="wb-net" title="All on-chain features run on Solana devnet (test network, free test SOL)">● Solana Devnet</span>
+    <button id="wbConnect" class="wb-btn">Connect Wallet</button>
+    <div id="wbConnected" class="wb-connected hidden">
+      <img id="wbIcon" alt="">
+      <a id="wbAddr" target="_blank"></a>
+      <b id="wbBal"></b>
+      <button id="wbAirdrop" title="Request free devnet SOL">+ SOL</button>
+      <button id="wbDisconnect" title="Disconnect">✕</button>
+    </div>
+    <div id="wbMenu" class="wb-menu hidden"></div>
+  </div>
+
+  <!-- Main menu: one way in -->
+  <div id="menu">
+    <div class="logo">
+      <div class="sanskrit">अस्त्र</div>
+      <h1>ASTRA</h1>
+      <h2>WAR OF LANKA</h2>
+    </div>
+    <div class="menu-main">
+      <button id="yatraBtn" class="primary yatra big">BEGIN YATRA</button>
+      <div class="tip">The Journey · Yuddha arena duels · Dharma Yuddha on-chain</div>
+    </div>
+  </div>
+
+  <!-- Yatra hub: every mode lives here -->
+  <div id="hub" class="hidden">
+    <div class="hub-head">
+      <div class="sanskrit">यात्रा</div>
+      <h2>YATRA</h2>
+      <p>Choose your path</p>
+    </div>
+    <div class="hub-tiles" id="hubTiles">
+      <button class="hub-tile" data-go="journey">
+        <span class="tag">ADVENTURE</span><h3>THE JOURNEY</h3>
+        <small>Play as Rama from Ayodhya across Ram Setu to Ashoka Vatika and Lanka. Run, hide, hunt rakshasas, face Ravana.</small>
+      </button>
+      <button class="hub-tile" data-go="yuddha">
+        <span class="tag">ARENA</span><h3>YUDDHA</h3>
+        <small>Real-time duel, Rama or Ravana, four battlefields, best of three rounds against the AI.</small>
+      </button>
+      <button class="hub-tile chain" data-go="dharma">
+        <span class="tag">ON-CHAIN · SOLANA</span><h3>DHARMA YUDDHA</h3>
+        <small>Hidden-move duels between warriors of the two armies. Moves sealed in MagicBlock's private rollup, SOL stakes, spectator bets.</small>
+      </button>
+    </div>
+
+    <div id="hubYuddha" class="hub-yuddha hidden">
+      <div class="menu-row">
+        <div class="card rama selected" data-id="rama">
+          <div class="faction">DHARMA SENA</div>
+          <h3>RAMA</h3>
+          <div class="epithet">Maryada Purushottama · wielder of Kodanda</div>
+          <ul>
+            <li><b>Kodanda strikes</b> — fast bow combos</li>
+            <li><b>Mantra Arrow</b> — hold to charge</li>
+            <li><b>Brahmastra</b> — divine beam ultimate</li>
+          </ul>
+        </div>
+        <div class="center">
+          <div class="label">ARENA</div>
+          <div class="arenas" id="arenaPick"></div>
+          <div class="tip" id="arenaTip">Moonlit garden of Lanka · Best of 3 rounds</div>
+          <div class="label">DIFFICULTY</div>
+          <div class="diff">
+            <button data-d="0">Easy</button>
+            <button data-d="1" class="on">Normal</button>
+            <button data-d="2">Hard</button>
+          </div>
+          <button id="startBtn" class="primary">FIGHT</button>
+        </div>
+        <div class="card ravana" data-id="ravana">
+          <div class="faction">RAKSHASA SENA</div>
+          <h3>RAVANA</h3>
+          <div class="epithet">Dashanana · King of Lanka</div>
+          <ul>
+            <li><b>Chandrahasa</b> — heavy crescent-sword combos</li>
+            <li><b>Agneyastra</b> — exploding fireball</li>
+            <li><b>Ten Heads</b> — rises once per round at 15 HP</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <button id="hubBack" class="hub-back">← Back</button>
+  </div>
+
+  <!-- Key guide: shown on the side in every mode (H to hide/show) -->
+  <aside id="keys" class="keys hidden">
+    <div class="keys-head"><span id="keysTitle">CONTROLS</span><button id="keysToggle" title="Hide/show (H)">H</button></div>
+    <div id="keysBody"></div>
+  </aside>
+
+  <!-- Dharma Yuddha: hidden-move duels (practice offline or on MagicBlock's private rollup) -->
+  <div id="dy" class="hidden">
+    <div id="dyLobby" class="dy-lobby">
+      <div class="dy-title">
+        <h2>DHARMA YUDDHA</h2>
+        <p>Each beat, both warriors lock a move in secret. On-chain, moves are sealed inside MagicBlock's TEE rollup until both are in.</p>
+      </div>
+      <div class="dy-roster" id="dyRoster"></div>
+      <div class="dy-foe-tip" id="dyFoeTip">Click a warrior to fight as them · right-click (or shift-click) to pick your opponent</div>
+      <div class="dy-modes" id="dyModes">
+        <button data-m="practice" class="on">Practice<small>offline vs bot</small></button>
+        <button data-m="bot">On-chain vs bot<small>devnet · solo demo</small></button>
+        <button data-m="pvp">On-chain PvP<small>create or join · stake</small></button>
+        <button data-m="watch">Watch &amp; bet<small>spectator pool</small></button>
+      </div>
+      <div id="dyWallet" class="dy-wallet hidden"><span id="dyWalletInfo"></span></div>
+      <div id="dyPvp" class="dy-row hidden">
+        <label>Stake (SOL) <input id="dyStake" type="number" min="0" step="0.01" value="0"></label>
+        <label>Join code <input id="dyJoinCode" placeholder="leave empty to create"></label>
+      </div>
+      <div id="dyWatch" class="dy-row hidden">
+        <label>Duel code <input id="dyWatchCode"></label>
+        <div id="dyPool" class="dy-pool"></div>
+        <div id="dyBetRow" class="hidden">
+          <select id="dyBetSide"><option value="0">Back player 1</option><option value="1">Back player 2</option></select>
+          <input id="dyBetAmt" type="number" min="0.01" step="0.01" value="0.05"> SOL
+          <button id="dyBetBtn">Place bet</button>
+        </div>
+      </div>
+      <div class="dy-err" id="dyErr"></div>
+      <div class="dy-actions">
+        <button id="dyBack">Back</button>
+        <button id="dyFight" class="primary">FIGHT</button>
+      </div>
+    </div>
+
+    <div id="dyHud" class="hidden">
+      <div class="dy-bars">
+        <div class="dy-side">
+          <div class="name"><span id="dyAName"></span><em id="dyAOmen" class="omen hidden">OMEN</em></div>
+          <div class="hp"><div class="hp-fill" id="dyAHp"></div><span id="dyAHpTxt"></span></div>
+          <div class="prana" id="dyAPranaBox"><div class="prana-fill" id="dyAPrana"></div></div>
+        </div>
+        <div class="dy-beat"><div id="dyBeat">BEAT 1</div><small id="dyModeLabel"></small></div>
+        <div class="dy-side right">
+          <div class="name"><em id="dyBOmen" class="omen hidden">OMEN</em><span id="dyBName"></span></div>
+          <div class="hp"><div class="hp-fill" id="dyBHp"></div><span id="dyBHpTxt"></span></div>
+          <div class="prana" id="dyBPranaBox"><div class="prana-fill" id="dyBPrana"></div></div>
+        </div>
+      </div>
+      <div id="dyReveal" class="dy-reveal"></div>
+      <div id="dyCode" class="dy-code hidden"></div>
+      <button id="dyBegin" class="primary hidden dy-begin">BEGIN · LOCK BETS</button>
+      <div class="dy-status" id="dyStatus"></div>
+      <div class="dy-moves" id="dyMoves"></div>
+      <div class="dy-tx" id="dyTx"></div>
+    </div>
+
+    <div id="dyResult" class="overlay hidden">
+      <div class="panel">
+        <h2 id="dyResultTitle">VIJAYA</h2>
+        <p id="dyResultText"></p>
+        <button id="dyAgain">Fight again</button>
+        <button id="dyDone">Main menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pause" class="overlay hidden">
+    <div class="panel">
+      <h2>PAUSED</h2>
+      <button id="resumeBtn" class="primary">Resume</button>
+      <button id="quitBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="result" class="overlay hidden">
+    <div class="panel">
+      <h2 id="resultTitle">VIJAYA</h2>
+      <p id="resultText"></p>
+      <button id="rematchBtn" class="primary">Rematch</button>
+      <button id="menuBtn">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="advEnd" class="overlay hidden">
+    <div class="panel">
+      <h2 id="advEndTitle"></h2>
+      <p id="advEndText"></p>
+      <button id="advRetry" class="primary">Retry</button>
+      <button id="advMenu">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="loading">Lighting the diyas…</div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

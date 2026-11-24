@@ -1,0 +1,2218 @@
+{
+  "address": "CKEg1c51J8rK8pr3Ka8hNNMkarmUPjTf5UcHAH5THwnu",
+  "metadata": {
+    "name": "dharma_yuddha",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Dharma Yuddha: hidden-move duels with spectator pools on MagicBlock Private Ephemeral Rollups"
+  },
+  "instructions": [
+    {
+      "name": "begin_duel",
+      "docs": [
+        "Either player starts the war: locks bets and sets health/prana. The client",
+        "sends `delegate_pda(Duel)` in the same transaction."
+      ],
+      "discriminator": [
+        140,
+        248,
+        130,
+        209,
+        146,
+        162,
+        8,
+        127
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "callback_omen",
+      "docs": [
+        "VRF callback: a verifiably random side is blessed with bonus prana and",
+        "the battlefield is chosen."
+      ],
+      "discriminator": [
+        16,
+        229,
+        142,
+        175,
+        81,
+        36,
+        35,
+        164
+      ],
+      "accounts": [
+        {
+          "name": "vrf_program_identity",
+          "docs": [
+            "Scoped VRF identity PDA, bound to this program. Its presence as a signer proves",
+            "the callback was issued by the VRF program for this program."
+          ],
+          "signer": true
+        },
+        {
+          "name": "duel",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "randomness",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel_duel",
+      "docs": [
+        "Refund the creator if nobody joined."
+      ],
+      "discriminator": [
+        83,
+        124,
+        224,
+        237,
+        235,
+        44,
+        38,
+        57
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player1",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_bet",
+      "docs": [
+        "Spectator collects: stake back plus a pro-rata share of the losing side.",
+        "Draws, or a side nobody backed, refund every bet."
+      ],
+      "discriminator": [
+        60,
+        61,
+        185,
+        215,
+        180,
+        119,
+        174,
+        126
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool.game_id",
+                "account": "Pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool.game_id",
+                "account": "Pool"
+              },
+              {
+                "kind": "account",
+                "path": "bettor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool.game_id",
+                "account": "Pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bettor",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "bet"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_pot",
+      "docs": [
+        "Base layer, after `undelegate_all`: pay the winner the pot (or refund both",
+        "on a draw) and settle the spectator pool. Anyone may trigger it."
+      ],
+      "discriminator": [
+        210,
+        85,
+        35,
+        217,
+        204,
+        65,
+        38,
+        17
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player1",
+          "writable": true
+        },
+        {
+          "name": "player2",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_timeout",
+      "docs": [
+        "A player who locked in a move wins if the opponent stalls past the timeout."
+      ],
+      "discriminator": [
+        130,
+        234,
+        45,
+        53,
+        120,
+        90,
+        86,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "move1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              },
+              {
+                "kind": "account",
+                "path": "duel.player1",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "move2",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              },
+              {
+                "kind": "account",
+                "path": "duel.player2",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "permission1",
+          "writable": true
+        },
+        {
+          "name": "permission2",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_duel",
+      "docs": [
+        "Create a duel, pick a warrior and stake SOL (0 = friendly). Pre-funds the",
+        "rent the Duel and the creator's move PDA need for their TEE permissions.",
+        "`session` is a short-lived key the wallet authorises to sign moves on the",
+        "rollup, so the player approves one wallet popup instead of one per beat."
+      ],
+      "discriminator": [
+        49,
+        28,
+        93,
+        11,
+        75,
+        242,
+        69,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player_move",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              },
+              {
+                "kind": "account",
+                "path": "player1"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player1",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        },
+        {
+          "name": "stake",
+          "type": "u64"
+        },
+        {
+          "name": "fighter",
+          "type": "u8"
+        },
+        {
+          "name": "session",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "delegate_pda",
+      "docs": [
+        "Delegate the Duel or a move PDA to the (TEE) ephemeral rollup."
+      ],
+      "discriminator": [
+        248,
+        217,
+        193,
+        46,
+        124,
+        191,
+        64,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "buffer_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pda"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                168,
+                28,
+                120,
+                108,
+                101,
+                212,
+                99,
+                41,
+                161,
+                202,
+                205,
+                197,
+                60,
+                230,
+                67,
+                28,
+                219,
+                145,
+                64,
+                25,
+                105,
+                175,
+                72,
+                50,
+                219,
+                5,
+                15,
+                10,
+                213,
+                178,
+                9,
+                30
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegation_record_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pda"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "delegation_metadata_pda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pda"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "pda",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "signer": true
+        },
+        {
+          "name": "validator",
+          "optional": true
+        },
+        {
+          "name": "owner_program",
+          "address": "CKEg1c51J8rK8pr3Ka8hNNMkarmUPjTf5UcHAH5THwnu"
+        },
+        {
+          "name": "delegation_program",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "account_type",
+          "type": {
+            "defined": {
+              "name": "AccountType"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "init_permission",
+      "docs": [
+        "Create the TEE permission for a delegated PDA. `members = None` → public",
+        "(the Duel, so spectators can watch health); `Some([owner])` → private (moves)."
+      ],
+      "discriminator": [
+        66,
+        14,
+        153,
+        250,
+        187,
+        36,
+        179,
+        236
+      ],
+      "accounts": [
+        {
+          "name": "permissioned_account",
+          "writable": true
+        },
+        {
+          "name": "permission",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "account_type",
+          "type": {
+            "defined": {
+              "name": "AccountType"
+            }
+          }
+        },
+        {
+          "name": "members",
+          "type": {
+            "option": {
+              "vec": {
+                "defined": {
+                  "name": "Member"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "join_duel",
+      "docs": [
+        "Second player joins with their own warrior and matches the stake."
+      ],
+      "discriminator": [
+        7,
+        247,
+        76,
+        103,
+        101,
+        139,
+        254,
+        61
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player_move",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              },
+              {
+                "kind": "account",
+                "path": "player"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "game_id",
+          "type": "u64"
+        },
+        {
+          "name": "fighter",
+          "type": "u8"
+        },
+        {
+          "name": "session",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "make_choice",
+      "docs": [
+        "Lock in a hidden move. The move PDA is private to its owner in the TEE."
+      ],
+      "discriminator": [
+        207,
+        18,
+        251,
+        32,
+        135,
+        122,
+        160,
+        77
+      ],
+      "accounts": [
+        {
+          "name": "player_move",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "duel",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner"
+        },
+        {
+          "name": "signer",
+          "docs": [
+            "The wallet or its session key."
+          ],
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "_game_id",
+          "type": "u64"
+        },
+        {
+          "name": "choice",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "next_beat",
+      "docs": [
+        "Clear the beat and hide the next moves again. Only a player can advance."
+      ],
+      "discriminator": [
+        31,
+        180,
+        180,
+        39,
+        112,
+        31,
+        119,
+        3
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "move1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              },
+              {
+                "kind": "account",
+                "path": "duel.player1",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "move2",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              },
+              {
+                "kind": "account",
+                "path": "duel.player2",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "permission1",
+          "writable": true
+        },
+        {
+          "name": "permission2",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "place_bet",
+      "docs": [
+        "Spectator backs side 0 (player 1) or 1 (player 2). Only while the duel",
+        "is still on the base layer and not begun — delegating it closes betting."
+      ],
+      "discriminator": [
+        222,
+        62,
+        67,
+        220,
+        63,
+        166,
+        126,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              },
+              {
+                "kind": "account",
+                "path": "bettor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "game_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bettor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_game_id",
+          "type": "u64"
+        },
+        {
+          "name": "side",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "process_undelegation",
+      "discriminator": [
+        196,
+        28,
+        41,
+        206,
+        48,
+        37,
+        51,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "base_account",
+          "writable": true
+        },
+        {
+          "name": "buffer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  110,
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  101,
+                  45,
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                181,
+                183,
+                0,
+                225,
+                242,
+                87,
+                58,
+                192,
+                204,
+                6,
+                34,
+                1,
+                52,
+                74,
+                207,
+                151,
+                184,
+                53,
+                6,
+                235,
+                140,
+                229,
+                25,
+                152,
+                204,
+                98,
+                126,
+                24,
+                147,
+                128,
+                167,
+                62
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "account_seeds",
+          "type": {
+            "vec": "bytes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request_omen",
+      "docs": [
+        "Ask the VRF oracle for the battle omen (once, before the first beat)."
+      ],
+      "discriminator": [
+        11,
+        241,
+        17,
+        223,
+        86,
+        103,
+        6,
+        140
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "duel",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "oracle_queue",
+          "writable": true
+        },
+        {
+          "name": "program_identity",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  100,
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vrf_program",
+          "address": "Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz"
+        },
+        {
+          "name": "slot_hashes",
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "client_seed",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "reveal_beat",
+      "docs": [
+        "Both moves are in: resolve the beat and make both moves readable."
+      ],
+      "discriminator": [
+        144,
+        83,
+        183,
+        150,
+        124,
+        156,
+        166,
+        233
+      ],
+      "accounts": [
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "move1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              },
+              {
+                "kind": "account",
+                "path": "duel.player1",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "move2",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              },
+              {
+                "kind": "account",
+                "path": "duel.player2",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "permission1",
+          "writable": true
+        },
+        {
+          "name": "permission2",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "permission_program",
+          "address": "ACLseoPoyC3cBqoUtkbjZ4aDrkurZW86v19pXz2XQnp1"
+        },
+        {
+          "name": "ephemeral_vault",
+          "writable": true,
+          "address": "MagicVau1t999999999999999999999999999999999"
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "undelegate_all",
+      "docs": [
+        "Commit + undelegate the decided duel and both move PDAs back to Solana."
+      ],
+      "discriminator": [
+        85,
+        123,
+        97,
+        145,
+        66,
+        22,
+        252,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "duel",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  117,
+                  101,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "move1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              },
+              {
+                "kind": "account",
+                "path": "duel.player1",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "move2",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  97,
+                  116,
+                  95,
+                  109,
+                  111,
+                  118,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "duel.game_id",
+                "account": "Duel"
+              },
+              {
+                "kind": "account",
+                "path": "duel.player2",
+                "account": "Duel"
+              }
+            ]
+          }
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Bet",
+      "discriminator": [
+        147,
+        23,
+        35,
+        59,
+        15,
+        75,
+        155,
+        32
+      ]
+    },
+    {
+      "name": "Duel",
+      "discriminator": [
+        126,
+        229,
+        210,
+        60,
+        177,
+        135,
+        124,
+        224
+      ]
+    },
+    {
+      "name": "PlayerMove",
+      "discriminator": [
+        213,
+        41,
+        205,
+        203,
+        240,
+        72,
+        80,
+        150
+      ]
+    },
+    {
+      "name": "Pool",
+      "discriminator": [
+        241,
+        154,
+        109,
+        4,
+        17,
+        177,
+        109,
+        188
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "BadFighter",
+      "msg": "Unknown warrior."
+    },
+    {
+      "code": 6001,
+      "name": "BadMove",
+      "msg": "Unknown move."
+    },
+    {
+      "code": 6002,
+      "name": "BadSide",
+      "msg": "Side must be 0 or 1."
+    },
+    {
+      "code": 6003,
+      "name": "ZeroBet",
+      "msg": "Bet must be more than zero."
+    },
+    {
+      "code": 6004,
+      "name": "BettingClosed",
+      "msg": "Betting is closed: the duel has begun."
+    },
+    {
+      "code": 6005,
+      "name": "CannotJoinOwn",
+      "msg": "You cannot join your own duel."
+    },
+    {
+      "code": 6006,
+      "name": "Full",
+      "msg": "Duel already has two warriors."
+    },
+    {
+      "code": 6007,
+      "name": "MissingOpponent",
+      "msg": "Duel has no opponent yet."
+    },
+    {
+      "code": 6008,
+      "name": "NotAPlayer",
+      "msg": "Only a duelist can do this."
+    },
+    {
+      "code": 6009,
+      "name": "AlreadyStarted",
+      "msg": "Duel already started."
+    },
+    {
+      "code": 6010,
+      "name": "NotInBeat",
+      "msg": "Not accepting moves right now."
+    },
+    {
+      "code": 6011,
+      "name": "AlreadyChose",
+      "msg": "You already locked in a move."
+    },
+    {
+      "code": 6012,
+      "name": "MissingChoice",
+      "msg": "Both moves must be locked in first."
+    },
+    {
+      "code": 6013,
+      "name": "NotRevealed",
+      "msg": "Beat not revealed yet."
+    },
+    {
+      "code": 6014,
+      "name": "NoPrana",
+      "msg": "Not enough prana for an astra."
+    },
+    {
+      "code": 6015,
+      "name": "OmenClosed",
+      "msg": "The omen can only be cast before the first beat."
+    },
+    {
+      "code": 6016,
+      "name": "NotDecided",
+      "msg": "Duel not decided yet."
+    },
+    {
+      "code": 6017,
+      "name": "AlreadyPaid",
+      "msg": "Already paid."
+    },
+    {
+      "code": 6018,
+      "name": "Settled",
+      "msg": "Duel already settled."
+    },
+    {
+      "code": 6019,
+      "name": "WrongPlayer",
+      "msg": "Wrong player account."
+    },
+    {
+      "code": 6020,
+      "name": "TooEarly",
+      "msg": "Timeout not reached."
+    },
+    {
+      "code": 6021,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow."
+    }
+  ],
+  "types": [
+    {
+      "name": "AccountType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Duel",
+            "fields": [
+              {
+                "name": "game_id",
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "Move",
+            "fields": [
+              {
+                "name": "game_id",
+                "type": "u64"
+              },
+              {
+                "name": "player",
+                "type": "pubkey"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Bet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "bettor",
+            "type": "pubkey"
+          },
+          {
+            "name": "side",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Duel",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "player1",
+            "type": "pubkey"
+          },
+          {
+            "name": "player2",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "session1",
+            "type": "pubkey"
+          },
+          {
+            "name": "session2",
+            "type": "pubkey"
+          },
+          {
+            "name": "fighter1",
+            "type": "u8"
+          },
+          {
+            "name": "fighter2",
+            "type": "u8"
+          },
+          {
+            "name": "hp1",
+            "type": "u16"
+          },
+          {
+            "name": "hp2",
+            "type": "u16"
+          },
+          {
+            "name": "prana1",
+            "type": "u8"
+          },
+          {
+            "name": "prana2",
+            "type": "u8"
+          },
+          {
+            "name": "beat",
+            "type": "u8"
+          },
+          {
+            "name": "last_move1",
+            "type": "u8"
+          },
+          {
+            "name": "last_move2",
+            "type": "u8"
+          },
+          {
+            "name": "last_taken1",
+            "type": "u16"
+          },
+          {
+            "name": "last_taken2",
+            "type": "u16"
+          },
+          {
+            "name": "revealed",
+            "type": "bool"
+          },
+          {
+            "name": "winner",
+            "type": "u8"
+          },
+          {
+            "name": "omen",
+            "type": "u8"
+          },
+          {
+            "name": "arena",
+            "type": "u8"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "paid",
+            "type": "bool"
+          },
+          {
+            "name": "started",
+            "type": "bool"
+          },
+          {
+            "name": "beat_started_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Member",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "flags",
+            "type": "u8"
+          },
+          {
+            "name": "pubkey",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerMove",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "player",
+            "type": "pubkey"
+          },
+          {
+            "name": "choice",
+            "type": {
+              "option": "u8"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Pool",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "game_id",
+            "type": "u64"
+          },
+          {
+            "name": "total1",
+            "type": "u64"
+          },
+          {
+            "name": "total2",
+            "type": "u64"
+          },
+          {
+            "name": "bettors",
+            "type": "u32"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
+            "name": "winner",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

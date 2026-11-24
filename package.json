@@ -1,0 +1,28 @@
+{
+  "name": "astra-war-of-lanka",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ASTRA: War of Lanka - a Ramayana-inspired 3D fighting game prototype",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "chain:build": "cd onchain && anchor keys sync && anchor build && mkdir -p ../src/duel/idl && cp target/idl/dharma_yuddha.json ../src/duel/idl/",
+    "chain:test": "cd onchain && cargo test -p dharma-yuddha",
+    "chain:deploy": "cd onchain && anchor deploy --provider.cluster devnet",
+    "test:rules": "node --test tests/"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@magicblock-labs/ephemeral-rollups-sdk": "^0.14.3",
+    "@solana/web3.js": "^1.98.4",
+    "@wallet-standard/app": "^1.1.0",
+    "buffer": "^6.0.3",
+    "three": "^0.170.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "vite": "^5.4.11"
+  }
+}
