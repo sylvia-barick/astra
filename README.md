@@ -15,8 +15,20 @@
 
 ---
 
+## Videos
+
+| 🎬 Trailer (60 s) | 🎮 Full gameplay walkthrough (1:29, game sound) |
+|---|---|
+| [![Watch the trailer on X](docs/screenshots/thumb-trailer-x.jpg)](https://x.com/Sylviabarick/status/2125559198788505805) | [![Watch the full gameplay walkthrough](docs/screenshots/thumb-gameplay.jpg)](https://sylvia-barick.github.io/astra/media/astra-gameplay.mp4) |
+| [▶ Watch on X](https://x.com/Sylviabarick/status/2125559198788505805) | [▶ Play the video](https://sylvia-barick.github.io/astra/media/astra-gameplay.mp4) (opens and plays in your browser) |
+
+The walkthrough is one take through the real game: connect a wallet → BEGIN YATRA → The Journey → Yuddha → a real **on-chain Dharma Yuddha duel on devnet** → the payout transaction on Solana Explorer.
+
+---
+
 ## Contents
 
+1. [Videos](#videos)
 1. [At a glance](#at-a-glance)
 2. [Screenshots](#screenshots)
 3. [Game modes and controls](#game-modes-and-controls)
@@ -38,6 +50,8 @@
 | | |
 |---|---|
 | **Live game** | https://sylvia-barick.github.io/astra/ |
+| **Trailer** | [Watch on X](https://x.com/Sylviabarick/status/2125559198788505805) |
+| **Gameplay video** | [Play (1:29)](https://sylvia-barick.github.io/astra/media/astra-gameplay.mp4) |
 | **Network** | Solana **devnet** |
 | **Program ID** | [`CKEg1c51J8rK8pr3Ka8hNNMkarmUPjTf5UcHAH5THwnu`](https://explorer.solana.com/address/CKEg1c51J8rK8pr3Ka8hNNMkarmUPjTf5UcHAH5THwnu?cluster=devnet) |
 | **Rollup** | MagicBlock Private Ephemeral Rollup (TEE): `devnet-tee.magicblock.app`, validator `MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo` |
