@@ -20,7 +20,7 @@
 | 🎬 Trailer (60 s) | 🎮 Full gameplay walkthrough (1:29, game sound) |
 |---|---|
 | [![Watch the trailer on X](docs/screenshots/thumb-trailer-x.jpg)](https://x.com/Sylviabarick/status/2125559198788505805) | [![Watch the full gameplay walkthrough](docs/screenshots/thumb-gameplay.jpg)](https://sylvia-barick.github.io/astra/media/astra-gameplay.mp4) |
-| [▶ Watch on X](https://x.com/Sylviabarick/status/2125559198788505805) | [▶ Play the video](https://sylvia-barick.github.io/astra/media/astra-gameplay.mp4) (opens and plays in your browser) |
+| [▶ Watch on X](https://x.com/Sylviabarick/status/2125559198788505805) | [▶ Play the video](https://sylvia-barick.github.io/astra/media/astra-gameplay.mp4) |
 
 The walkthrough is one take through the real game: connect a wallet → BEGIN YATRA → The Journey → Yuddha → a real **on-chain Dharma Yuddha duel on devnet** → the payout transaction on Solana Explorer.
 
