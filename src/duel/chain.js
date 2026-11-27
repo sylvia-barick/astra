@@ -29,7 +29,7 @@ export const TEE_WS_ENDPOINT = env.VITE_TEE_WS_ENDPOINT || TEE_ENDPOINT.replace(
 export const ER_VALIDATOR = new PublicKey(env.VITE_VALIDATOR || 'MTEWGuqxUpYZGFJQcp8tLN7x5v9BSeoFHYWQQ3n3xzo');
 export const VRF_QUEUE = new PublicKey(env.VITE_VRF_QUEUE || '5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc');
 const VAULT_ID = new PublicKey('MagicVau1t999999999999999999999999999999999');
-export const SESSION_FUND_SOL = 0.02;
+export const SESSION_FUND_SOL = 0.025;
 export const BOT_FUND_SOL = 0.03;
 export const SLOT_RENT_LAMPORTS = 3_000_000;
 
@@ -172,7 +172,7 @@ export class DuelClient {
       .instruction();
     const del = await this.delegateIx({ move: { gameId: new BN(id), player: this.owner } }, this.movePda(id, this.owner), this.owner);
     const fund = this.session.publicKey.equals(this.owner) ? [] : [this.fundIx(this.sk, SESSION_FUND_SOL)];
-    return this.sendWallet([...fund, ...extraIxs, create, del, ...this.slotRentIx(id)], `Create duel${stakeSol ? ` · stake ${stakeSol} SOL` : ''}`);
+    return this.sendWallet([...fund, ...extraIxs, create, del], `Create duel${stakeSol ? ` · stake ${stakeSol} SOL` : ''}`);
   }
 
   /**
@@ -192,7 +192,7 @@ export class DuelClient {
       .instruction();
     const del = await this.delegateIx({ move: { gameId: new BN(id), player: this.owner } }, this.movePda(id, this.owner), this.owner);
     const fund = this.session.publicKey.equals(this.owner) ? [] : [this.fundIx(this.sk, SESSION_FUND_SOL)];
-    return this.sendWallet([...fund, join, del, ...this.slotRentIx(id)], 'Join duel + match stake');
+    return this.sendWallet([...fund, join, del], 'Join duel + match stake');
   }
 
   async placeBet(id, side, amountSol) {
@@ -249,8 +249,31 @@ export class DuelClient {
     await this.waitOnEr(mv);
     const members = [{ flags: AUTHORITY_FLAG | TX_LOGS_FLAG, pubkey: this.owner }];
     if (!this.sk.equals(this.owner)) members.push({ flags: AUTHORITY_FLAG | TX_LOGS_FLAG, pubkey: this.sk });
+    // A two-reader slot needs the rent top-up sent with create/join. The rollup
+    // credits it asynchronously, so wait for it before sealing (and retry once
+    // more if the seal still races it).
+    if (members.length > 1) {
+      const conn = await this.teeConn();
+      const before = (await conn.getAccountInfo(mv).catch(() => null))?.lamports ?? 0;
+      if (before < SLOT_RENT_LAMPORTS) {
+        // Session key pays the slot's extra rent through MagicBlock's delegated lamports transfer.
+        const ix0 = lamportsDelegatedTransferIx(this.sk, mv, BigInt(SLOT_RENT_LAMPORTS), crypto.getRandomValues(new Uint8Array(32)));
+        await this.sendSessionBase([ix0], 'Top up move-slot rent on the rollup');
+      }
+      for (let i = 0; i < 60; i++) {
+        const info = await conn.getAccountInfo(mv).catch(() => null);
+        if (info && info.lamports >= SLOT_RENT_LAMPORTS) break;
+        await sleep(500);
+      }
+    }
     const ix = await this.permissionIx({ move: { gameId: new BN(id), player: this.owner } }, mv, members);
-    const sig = await this.sendEr([ix], 'Seal my move slot in the TEE');
+    let sig;
+    for (let attempt = 0; ; attempt++) {
+      try { sig = await this.sendEr([ix], 'Seal my move slot in the TEE'); break; } catch (e) {
+        if (attempt >= 3 || !/InsufficientFundsForRent/.test(e.message)) throw e;
+        await sleep(2000);
+      }
+    }
     await waitUntilPermissionActive(TEE_ENDPOINT, mv);
     return sig;
   }
